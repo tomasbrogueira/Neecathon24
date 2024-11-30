@@ -63,10 +63,8 @@ def make_get_request(url):
     """
     try:
         response = urequests.get(url)
-        print(f"GET {url} - Status Code: {response.status_code}")
         if response.status_code == 200:
             data = response.json()
-            print("Response JSON:", data)
             response.close()
             return data
         else:
@@ -77,18 +75,54 @@ def make_get_request(url):
         print("An error occurred during GET request:", e)
         return None
 
+def make_post_request(url, payload):
+    """
+    Performs an HTTP POST request with specified payload to the specified URL.
+    
+    Args:
+        url (str): The URL to send the POST request to.
+        
+    Returns:
+        dict: Parsed JSON response if successful, None otherwise.
+    """
+    
+    try:
+        response = urequests.post(url, json=payload)
+        print(f"POST {url} - Status Code: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            print("Response JSON:", data)
+            response.close()
+            return data
+        else:
+            print("Failed to post data.")
+            response.close()
+            return None
+    except Exception as e:
+        print("An error occurred during POST request:", e)
+        return None
+
 SSID = "Neecathon"
 PASSWORD = "neecathon2024!"
 connect_wifi(SSID, PASSWORD)
 
-def check_buzzer():
-    GET_URL = "http://172.20.199.108:5000/check_buzzer_status"
+def add_bpm(bpm):
+    POST_URL = "http://172.20.199.108:5000/add_bpm"
+    payload = {"bpm": bpm}
+    response = make_post_request(POST_URL, payload)
+
+
+def check_alarm():
+    GET_URL = "http://172.20.199.108:5000/check_alarm"
     response = make_get_request(GET_URL)
     if response is None:
         return
     
-    if response['buzzer_on']:
+    if response['alarm_on']:
         play_buzzer()
+        set_color(255, 0, 0)
+        utime.sleep(0.2)
+        set_color(0, 0, 0)
 
 def play_buzzer():
     buzzer.on()
@@ -117,7 +151,7 @@ bpm = 0
 peak_detected = False
 
 # Threshold adjustment factor
-threshold_factor = 1.15  # Adjust as needed
+threshold_factor = 1.1  # Adjust as needed
 
 # Main loop
 while True:
@@ -147,6 +181,7 @@ while True:
             last_peak_time = current_time
             bpm = 60000 / time_between_beats
             print('Heartbeat detected. BPM:', int(bpm))
+            add_bpm(int(bpm))
 
     elif raw_value < mean_value and peak_detected:
         # Peak has fallen below the mean, reset peak detection
@@ -156,10 +191,10 @@ while True:
     # print('Raw:', raw_value, 'Mean:', mean_value, 'Threshold:', threshold)
 
     # Delay for 10ms to sample at 100Hz
-    sleep(1)
-    check_buzzer()
-
+    # sleep(1)
+    check_alarm()
+    sleep(0.1)
     # Generate 3 random integers
-    r = random.randint(0, 255)
-    g = random.randint(0, 255)
-    set_color(r,g,255)
+    # r = random.randint(0, 255)
+    # g = random.randint(0, 255)
+    # set_color(r,g,255)
