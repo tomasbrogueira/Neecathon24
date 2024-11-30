@@ -15,7 +15,7 @@ bpm = 0
 peak_detected = False
 
 # Threshold adjustment factor
-threshold_factor = 1.20  # Adjust as needed
+threshold_factor = 1.15  # Adjust as needed
 
 # Main loop
 while True:
