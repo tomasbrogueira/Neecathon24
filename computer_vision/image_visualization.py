@@ -2,25 +2,15 @@ import os
 import cv2
 import matplotlib.pyplot as plt
 
-# Define the path to the dataset
-dataset_path = 'dataset/Closed_Eyes'
-
-# List all files in the dataset directory
-image_files = os.listdir(dataset_path)
-
-# Access the first image in the dataset
-first_image_path = os.path.join(dataset_path, image_files[0])
-
-# Read the image using OpenCV
-image = cv2.imread(first_image_path)
-
-print(image.shape)
-
-# Convert the image from BGR to RGB
-image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-# Display the image using matplotlib
-plt.imshow(image_rgb)
-plt.title('First Image in Closed_Eyes Dataset')
-plt.axis('off')  # Hide the axis
-plt.show()
+Datadirectory = "dataset/" ## folder where the dataset is stored
+Classes = ["Closed_Eyes", "Open_Eyes"] ## classes of the dataset
+for category in Classes:
+    # difference
+    path = os.path.join(Datadirectory, category)
+    for img in os.listdir(path):
+        img_array = cv2.imread(os.path.join(path,img), cv2.IMREAD_GRAYSCALE)
+        backtorgb = cv2.cvtColor(img_array, cv2.COLOR_GRAY2RGB)
+        plt.imshow(img_array, cmap='gray')
+        plt.show()
+        break
+    break
