@@ -4,7 +4,7 @@ import struct
 import pickle
 
 # Configurar socket
-HOST = '172.20.199.67'  # Use localhost do programa em si
+HOST = '172.20.199.123'  # Use localhost do programa em si
 PORT = 9999 # Porta para comunicação
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((HOST, PORT))
