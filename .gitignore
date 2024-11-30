@@ -164,3 +164,5 @@ cython_debug/
 
 # Apple DS store files
 .DS_Store
+
+computer_vision/dataset/
