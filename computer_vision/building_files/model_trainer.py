@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt ## pip install matplotlib
 import numpy as np ## pip install numpy
 import random as rn
 
-from preprocessing import create_data
+from computer_vision.building_files.preprocessing import create_data
 
 
 Datadirectory = "dataset/" ## folder where the dataset is stored
