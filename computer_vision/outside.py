@@ -5,7 +5,6 @@ import socket
 import struct
 import pickle
 from collections import deque
-import threading
 
 # ==================== Hyperparameters ====================
 WINDOW_SIZE = 20           # Number of recent frames to consider
@@ -36,10 +35,6 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 
 # Initialize deque to store the status of the latest WINDOW_SIZE frames
 status_queue = deque(maxlen=WINDOW_SIZE)
-
-# Shared variable and lock for drowsy ratio
-shared_data = {"drowsy_ratio": 0.0}
-lock = threading.Lock()
 
 try:
     while True:
@@ -108,6 +103,7 @@ try:
                 else:
                     current_status = "Eyes Not Detected"
                     status = current_status
+                    print("Eyes are not detected")
                 break  # Process only the first detected face
         else:
             current_status = "No Face Detected"
@@ -122,10 +118,6 @@ try:
             drowsy_ratio = drowsy_count / WINDOW_SIZE
         else:
             drowsy_ratio = 0  # Not enough data yet
-
-        # Update the shared drowsy_ratio variable
-        with lock:
-            shared_data["drowsy_ratio"] = drowsy_ratio
 
         # Determine overall status based on the drowsy_ratio
         if drowsy_ratio >= DROWSY_RATIO_THRESHOLD:
