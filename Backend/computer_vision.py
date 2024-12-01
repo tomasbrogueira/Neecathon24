@@ -148,8 +148,6 @@ try:
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-
-
 finally:
     conn.close()
     server_socket.close()

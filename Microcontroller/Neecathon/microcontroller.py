@@ -5,13 +5,14 @@ from time import sleep, time
 import urequests
 import random
 
-RED_PIN_NUMBER = 15    # Example: GP15
-GREEN_PIN_NUMBER = 14  # Example: GP14
-BLUE_PIN_NUMBER = 13   # Example: GP13
+RED_PIN_NUMBER = 9    # Example: GP15
+GREEN_PIN_NUMBER = 10  # Example: GP14
+BLUE_PIN_NUMBER = 11   # Example: GP13
 
 # Initialize ADC on GP26 (ADC0)
 adc = ADC(Pin(26))
 buzzer = Pin(17, Pin.OUT)
+vibration_motor = Pin(16, Pin.OUT)
 red_pin = PWM(Pin(RED_PIN_NUMBER, Pin.OUT))
 green_pin = PWM(Pin(GREEN_PIN_NUMBER, Pin.OUT))
 blue_pin = PWM(Pin(BLUE_PIN_NUMBER, Pin.OUT))
@@ -20,6 +21,8 @@ FREQUENCY = 440  # Frequency in Hz
 red_pin.freq(FREQUENCY)
 green_pin.freq(FREQUENCY)
 blue_pin.freq(FREQUENCY)
+
+alarm_detected = False
 
 def connect_wifi(ssid, password, timeout=10):
     """
@@ -88,10 +91,8 @@ def make_post_request(url, payload):
     
     try:
         response = urequests.post(url, json=payload)
-        print(f"POST {url} - Status Code: {response.status_code}")
         if response.status_code == 200:
             data = response.json()
-            print("Response JSON:", data)
             response.close()
             return data
         else:
@@ -102,8 +103,8 @@ def make_post_request(url, payload):
         print("An error occurred during POST request:", e)
         return None
 
-SSID = "PMGuest"
-PASSWORD = "127.0.0.1"
+SSID = "Neecathon"
+PASSWORD = "neecathon2024!"
 connect_wifi(SSID, PASSWORD)
 
 def add_bpm(bpm):
@@ -115,19 +116,16 @@ def add_bpm(bpm):
 def check_alarm():
     GET_URL = "http://172.20.199.108:5000/check_alarm"
     response = make_get_request(GET_URL)
+
+    global alarm_detected
+
     if response is None:
         return
     
     if response['alarm_on']:
-        play_buzzer()
-        set_color(255, 0, 0)
-        utime.sleep(0.2)
-        set_color(0, 0, 0)
-
-def play_buzzer():
-    buzzer.on()
-    utime.sleep(0.5)
-    buzzer.off()
+        alarm_detected = True
+    else:
+        alarm_detected = False
 
 def set_color(r, g, b):
     # Scale RGB values to PWM duty cycle (0-65535)
@@ -152,6 +150,8 @@ peak_detected = False
 
 # Threshold adjustment factor
 threshold_factor = 1.1  # Adjust as needed
+
+last_time = utime.ticks_ms()
 
 # Main loop
 while True:
@@ -181,20 +181,22 @@ while True:
             last_peak_time = current_time
             bpm = 60000 / time_between_beats
             print('Heartbeat detected. BPM:', int(bpm))
-            add_bpm(int(bpm))
+            # add_bpm(int(bpm))
 
     elif raw_value < mean_value and peak_detected:
         # Peak has fallen below the mean, reset peak detection
         peak_detected = False
 
-    # Optional: print raw and mean values for debugging
-    # print('Raw:', raw_value, 'Mean:', mean_value, 'Threshold:', threshold)
+    if utime.ticks_diff(current_time, last_time) > 2000:
+        last_time = current_time
+        check_alarm()
 
-    # Delay for 10ms to sample at 100Hz
-    # sleep(1)
-    check_alarm()
-    sleep(0.1)
-    # Generate 3 random integers
-    # r = random.randint(0, 255)
-    # g = random.randint(0, 255)
-    # set_color(r,g,255)
+    if alarm_detected:
+        set_color(255, 0, 0)
+        buzzer.on()
+        vibration_motor.on()
+    else:
+        set_color(0, 0, 0)
+        buzzer.off()
+        vibration_motor.off()
+
