@@ -1,1 +1,1 @@
-The datasets used for the training of the computer vision models is in the neecathon24-datasets repository.
+The datasets used for training the computer vision models are in the neecathon24-datasets repository, which is private for privacy purposes. These datasets consist of the MRL eye dataset and a custom dataset created during the competition, made up of 150 pictures of different people present in the competition itself.
