@@ -3,7 +3,6 @@ import utime
 import network
 from time import sleep, time
 import urequests
-import random
 
 RED_PIN_NUMBER = 9    # Example: GP15
 GREEN_PIN_NUMBER = 10  # Example: GP14
@@ -192,11 +191,10 @@ while True:
 
     if utime.ticks_diff(current_time, last_time) > 2000:
         last_time = current_time
-        print("HERE!")
         check_alarm()
 
     if alarm_detected:
-        set_color(255, 0, 0)
+        set_color(255, 255, 255)
         buzzer.on()
         vibration_motor.on()
     else:
