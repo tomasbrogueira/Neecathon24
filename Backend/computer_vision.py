@@ -5,14 +5,6 @@ import socket
 import struct
 import pickle
 from collections import deque
-from celery import Celery
-
-# Celery Configuration
-celery = Celery(
-    "ml_script",
-    backend="redis://localhost:6379/0",
-    broker="redis://localhost:6379/0"
-)
 
 # Hyperparameters
 WINDOW_SIZE = 20
@@ -39,70 +31,63 @@ data = b""
 payload_size = struct.calcsize(">L")
 
 
-@celery.task
-def update_drowsy_ratio_task(drowsy_ratio):
-    """
-    Update the shared drowsy ratio value asynchronously.
-    """
-    shared_data["drowsy_ratio"] = drowsy_ratio
-
-
 try:
-    while True:
-        # Video frame processing (same as before)
-        while len(data) < payload_size:
-            packet = conn.recv(4096)
-            if not packet:
+    with open("drowsy_ratio.txt", "w") as f:
+        while True:
+            # Video frame processing (same as before)
+            while len(data) < payload_size:
+                packet = conn.recv(4096)
+                if not packet:
+                    break
+                data += packet
+
+            if len(data) < payload_size:
                 break
-            data += packet
 
-        if len(data) < payload_size:
-            break
+            packed_size = data[:payload_size]
+            data = data[payload_size:]
+            frame_size = struct.unpack(">L", packed_size)[0]
 
-        packed_size = data[:payload_size]
-        data = data[payload_size:]
-        frame_size = struct.unpack(">L", packed_size)[0]
+            while len(data) < frame_size:
+                packet = conn.recv(4096)
+                if not packet:
+                    break
+                data += packet
 
-        while len(data) < frame_size:
-            packet = conn.recv(4096)
-            if not packet:
+            if len(data) < frame_size:
                 break
-            data += packet
 
-        if len(data) < frame_size:
-            break
+            frame_data = data[:frame_size]
+            data = data[frame_size:]
 
-        frame_data = data[:frame_size]
-        data = data[frame_size:]
+            frame = pickle.loads(frame_data)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        frame = pickle.loads(frame_data)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+            status = "No Face Detected"
 
-        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-        status = "No Face Detected"
+            if len(faces) > 0:
+                status = "Face Detected"
+                for (x, y, w, h) in faces:
+                    face_roi_gray = gray[y:y + h, x:x + w]
+                    eyes = eye_cascade.detectMultiScale(face_roi_gray)
+                    if len(eyes) > 0:
+                        for (ex, ey, ew, eh) in eyes:
+                            eyes_roi = face_roi_gray[ey:ey + eh, ex:ex + ew]
+                            final_image = cv2.resize(eyes_roi, (224, 224))
+                            final_image = np.expand_dims(final_image, axis=0)
+                            final_image = final_image / 255.0
 
-        if len(faces) > 0:
-            status = "Face Detected"
-            for (x, y, w, h) in faces:
-                face_roi_gray = gray[y:y + h, x:x + w]
-                eyes = eye_cascade.detectMultiScale(face_roi_gray)
-                if len(eyes) > 0:
-                    for (ex, ey, ew, eh) in eyes:
-                        eyes_roi = face_roi_gray[ey:ey + eh, ex:ex + ew]
-                        final_image = cv2.resize(eyes_roi, (224, 224))
-                        final_image = np.expand_dims(final_image, axis=0)
-                        final_image = final_image / 255.0
+                            predictions = model.predict(final_image)
+                            status = "Awake" if predictions[0][0] > 0.5 else "Drowsy"
+                            break
 
-                        predictions = model.predict(final_image)
-                        status = "Awake" if predictions[0][0] > 0.5 else "Drowsy"
-                        break
+            status_queue.append(status)
+            drowsy_count = sum(1 for s in status_queue if s == "Drowsy")
+            drowsy_ratio = drowsy_count / len(status_queue) if status_queue else 0
 
-        status_queue.append(status)
-        drowsy_count = sum(1 for s in status_queue if s == "Drowsy")
-        drowsy_ratio = drowsy_count / len(status_queue) if status_queue else 0
-
-        # Call Celery task to update shared data
-        update_drowsy_ratio_task.apply_async(args=[drowsy_ratio])
+            # Write the drowsy ratio to a file
+            f.write(f"{drowsy_ratio}\n")
 
 finally:
     conn.close()

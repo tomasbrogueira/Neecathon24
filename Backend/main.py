@@ -1,16 +1,10 @@
 import flask
 from flask import jsonify
-from celery import Celery
-from celery.py import make_celery
 
 app = flask.Flask(__name__)
 
-# Initialize Celery
-celery = make_celery(app)
-
 alarm_on = False
 bpm_list = []
-drowsy_ratio = 0.0  # Initial value
 
 @app.route('/')
 def home():
@@ -38,18 +32,11 @@ def get_drowsy_ratio():
     """
     Returns the current drowsy ratio by querying the Celery task result.
     """
-    result = fetch_drowsy_ratio_task.apply_async()
-    drowsy_ratio = result.get()  # Wait for task completion
+    drowsy_ratio = 0
+    with open("drowsy_ratio.txt", "r") as f:
+        drowsy_ratio = float(f.read())
+
     return jsonify({"status": "OK", "drowsy_ratio": drowsy_ratio})
-
-
-@celery.task
-def fetch_drowsy_ratio_task():
-    """
-    Task to retrieve the current drowsy ratio from the shared data.
-    """
-    # In practice, you can fetch this from a shared data store or calculate dynamically
-    return shared_data["drowsy_ratio"]
 
 
 if __name__ == "__main__":
