@@ -21,6 +21,8 @@ def check_alarm():
 
     if drowsy_ratio > DROWSY_TREASHOLD:
         alarm_on = True
+    else:
+        alarm_on = False
 
     return jsonify({"status": "OK", "alarm_on": alarm_on})
 

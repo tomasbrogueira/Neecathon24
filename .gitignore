@@ -166,3 +166,4 @@ cython_debug/
 .DS_Store
 
 computer_vision/dataset/
+YOLO-Drowsiness-Detection/data/

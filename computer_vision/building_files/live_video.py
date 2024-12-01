@@ -33,7 +33,7 @@ while True:
         status = "Face Detected"
         for (x, y, w, h) in faces:
             # Draw rectangle around the face
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 178, 102), 2)
 
             face_roi_gray = gray[y:y + h, x:x + w]
             face_roi_color = frame[y:y + h, x:x + w]
