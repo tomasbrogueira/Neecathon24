@@ -102,8 +102,8 @@ def make_post_request(url, payload):
         print("An error occurred during POST request:", e)
         return None
 
-SSID = "Neecathon"
-PASSWORD = "neecathon2024!"
+SSID = "PMGuest"
+PASSWORD = "127.0.0.1"
 connect_wifi(SSID, PASSWORD)
 
 def add_bpm(bpm):
