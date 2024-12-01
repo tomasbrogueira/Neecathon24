@@ -23,6 +23,7 @@ green_pin.freq(FREQUENCY)
 blue_pin.freq(FREQUENCY)
 
 alarm_detected = False
+base_ip = "172.20.199.123"
 
 def connect_wifi(ssid, password, timeout=10):
     """
@@ -108,19 +109,21 @@ PASSWORD = "neecathon2024!"
 connect_wifi(SSID, PASSWORD)
 
 def add_bpm(bpm):
-    POST_URL = "http://172.20.199.108:5000/add_bpm"
+    POST_URL = "http://" + base_ip + ":5000/add_bpm"
     payload = {"bpm": bpm}
     response = make_post_request(POST_URL, payload)
 
 
 def check_alarm():
-    GET_URL = "http://172.20.199.108:5000/check_alarm"
+    GET_URL = "http://" + base_ip + ":5000/check_alarm"
     response = make_get_request(GET_URL)
 
     global alarm_detected
 
     if response is None:
         return
+    
+    print("Alarm status:", response['alarm_on'])
     
     if response['alarm_on']:
         alarm_detected = True
@@ -189,6 +192,7 @@ while True:
 
     if utime.ticks_diff(current_time, last_time) > 2000:
         last_time = current_time
+        print("HERE!")
         check_alarm()
 
     if alarm_detected:
