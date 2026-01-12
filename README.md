@@ -1,4 +1,4 @@
-**This project was done in the context of a 30-hour hackathon (NEECATHON 2025).**
+**This project was done in the context of a 30-hour hackathon (NEECATHON 2024).**
 
 
 The project consists of a computer vision model applied to a live video feed to detect sleepiness connected to various alarms through the use of a microcontroller.
